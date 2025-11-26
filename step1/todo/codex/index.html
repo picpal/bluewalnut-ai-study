@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo - Vanilla JS (TDD)</title>
+  <style>
+    /*
+      스타일 가이드
+      - 반응형, 접근성, 깔끔한 인터페이스
+      - 부드러운 트랜지션
+    */
+    :root{
+      --bg: #0f172a;          /* slate-900 */
+      --panel: #111827;       /* gray-900 */
+      --panel-2: #1f2937;     /* gray-800 */
+      --text: #e5e7eb;        /* gray-200 */
+      --muted: #94a3b8;       /* slate-400 */
+      --primary: #22c55e;     /* green-500 */
+      --danger: #ef4444;      /* red-500 */
+      --warn: #f59e0b;        /* amber-500 */
+      --accent: #60a5fa;      /* blue-400 */
+      --border: #334155;      /* slate-700 */
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+    }
+    *{ box-sizing: border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 15% 10%, #0b1225, transparent),
+                  radial-gradient(1000px 700px at 85% 5%, #0b1225, transparent),
+                  var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    .container{
+      max-width: 920px; margin: 0 auto; padding: 24px; display: grid; gap: 16px;
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap: 12px;
+    }
+    .title{
+      display:flex; align-items:center; gap:10px; font-weight: 700; letter-spacing: .2px;
+    }
+    .title .logo{ width:36px; height:36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), #22d3ee); box-shadow: var(--shadow); }
+    .panel{
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow);
+    }
+    form#todo-form{ display:grid; gap: 10px; grid-template-columns: 1fr 140px 160px 120px; }
+    form#todo-form input[type="text"]{ width:100%; padding:12px 14px; border-radius: 10px; border:1px solid var(--border); background:#0b1220; color:var(--text) }
+    select, input[type="date"]{ width:100%; padding:12px 10px; border-radius:10px; border:1px solid var(--border); background:#0b1220; color:var(--text) }
+    button{ cursor:pointer; border:none; border-radius:10px; padding:12px 14px; font-weight: 600 }
+    .btn-primary{ background: var(--primary); color:#06220f; }
+    .btn-ghost{ background: transparent; color: var(--text); border:1px solid var(--border) }
+    .btn-danger{ background: var(--danger); color: #220606 }
+    .btn-flat{ background: transparent; color: var(--muted); padding: 8px 10px }
+
+    .toolbar{ display:flex; gap:8px; flex-wrap: wrap; align-items:center }
+    .filters button[aria-pressed="true"]{ background: var(--accent); color:#04111d }
+    .counts{ margin-left:auto; color: var(--muted); font-size: 14px }
+    .search{ margin-left:auto; display:flex; gap:8px }
+    .search input{ width:220px }
+
+    ul#todo-list{ list-style: none; padding:0; margin:0; display:grid; gap:10px }
+    .todo{ display:grid; grid-template-columns: 28px 1fr auto; gap:10px; align-items:center; padding:12px; border:1px solid var(--border); border-radius:12px; background:#0b1220; transition: transform .18s ease, background-color .2s ease, opacity .2s }
+    .todo.enter{ animation: pop .18s ease }
+    @keyframes pop{ from{ transform: scale(.98); opacity:.0 } to{ transform: scale(1); opacity:1 } }
+    .todo-label{ display:flex; flex-direction:column; gap:4px }
+    .todo-title{ font-weight:600 }
+    .todo.done .todo-title{ text-decoration: line-through; color: var(--muted) }
+    .todo-meta{ display:flex; gap:8px; color: var(--muted); font-size: 12px }
+    .badge{ padding:2px 8px; border-radius: 999px; font-weight:700; letter-spacing:.2px }
+    .prio-high{ background: #fecaca; color:#7f1d1d }
+    .prio-medium{ background: #fde68a; color:#78350f }
+    .prio-low{ background: #bbf7d0; color:#064e3b }
+    .todo-actions{ display:flex; gap:6px }
+    .empty{ text-align:center; color: var(--muted); padding: 16px }
+
+    /* 반응형 */
+    @media (max-width: 860px){
+      form#todo-form{ grid-template-columns: 1fr 120px 1fr 110px }
+      .search input{ width:170px }
+    }
+    @media (max-width: 640px){
+      form#todo-form{ grid-template-columns: 1fr; }
+      .search{ width:100% }
+      .search input{ width:100% }
+      .toolbar{ gap:6px }
+      .counts{ width:100%; order: 3; margin-left: 0 }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title" aria-label="애플리케이션 타이틀">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Todo (Vanilla JS + TDD)</h1>
+      </div>
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="필터">
+          <button class="btn-ghost" data-filter="all" aria-pressed="true">전체</button>
+          <button class="btn-ghost" data-filter="active" aria-pressed="false">미완료</button>
+          <button class="btn-ghost" data-filter="completed" aria-pressed="false">완료</button>
+        </div>
+        <div class="search" role="search">
+          <input type="text" id="searchInput" placeholder="검색" aria-label="검색" />
+          <button class="btn-ghost" id="clearSearch" aria-label="검색 지우기">지우기</button>
+        </div>
+        <div class="counts" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </header>
+
+    <section class="panel" aria-labelledby="add-title">
+      <h2 id="add-title" class="sr-only" style="position:absolute;left:-9999px;">할 일 추가</h2>
+      <form id="todo-form">
+        <label class="sr-only" for="title" style="position:absolute;left:-9999px;">제목</label>
+        <input id="title" type="text" placeholder="무엇을 해야 하나요?" autocomplete="off" required />
+        <select id="priority" aria-label="우선순위">
+          <option value="high">높음</option>
+          <option value="medium" selected>중간</option>
+          <option value="low">낮음</option>
+        </select>
+        <input id="due" type="date" aria-label="마감일" />
+        <button class="btn-primary" type="submit" aria-label="할 일 추가">추가</button>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="list-title">
+      <h2 id="list-title" class="sr-only" style="position:absolute;left:-9999px;">할 일 목록</h2>
+      <ul id="todo-list" role="list"></ul>
+      <div id="empty" class="empty" hidden>할 일이 없습니다. 새 항목을 추가해 보세요.</div>
+    </section>
+  </div>
+
+  <script>
+    // 테스트 실행 방법: 페이지를 열면 테스트가 자동으로 실행되며, 결과는 콘솔에 표시됩니다.
+    // 브라우저 콘솔을 열어 통과/실패 여부를 확인하세요.
+
+    /*****************************************************************
+     * 유틸리티: 간단한 assert 및 테스트 러너
+     *****************************************************************/
+    const Test = (() => {
+      const results = [];
+      function assert(name, condition){
+        if(!condition){ throw new Error(name + ' 실패'); }
+      }
+      async function run(name, fn){
+        try{ await fn(assert); results.push({ name, ok: true }); }
+        catch(e){ console.error('[FAIL]', name, e.message); results.push({ name, ok: false, message: e.message }); }
+      }
+      function report(){
+        const ok = results.filter(r=>r.ok).length;
+        const fail = results.length - ok;
+        const color = fail ? 'color: #ef4444' : 'color: #22c55e';
+        console.log('%c\n테스트 결과: ' + ok + ' 통과, ' + fail + ' 실패', color);
+        results.forEach(r => console[r.ok ? 'log' : 'error']((r.ok?'[PASS] ':'[FAIL] ')+r.name));
+      }
+      return { run, report };
+    })();
+
+    /*****************************************************************
+     * 도메인 모델 및 저장소
+     * - 단일 책임 원칙을 따르는 작은 함수들로 구성
+     *****************************************************************/
+
+    // 타입 힌트용 주석
+    /**
+     * @typedef {Object} Todo
+     * @property {string} id
+     * @property {string} title
+     * @property {boolean} completed
+     * @property {('high'|'medium'|'low')} priority
+     * @property {string|null} due ISO 날짜 문자열(YYYY-MM-DD) 또는 null
+     */
+
+    // 순수 유틸 함수들 (테스트 대상)
+    const uid = () => Math.random().toString(36).slice(2, 10);
+
+    function createTodo(title, priority = 'medium', due = null){
+      if(typeof title !== 'string' || !title.trim()) throw new Error('제목은 필수');
+      return { id: uid(), title: title.trim(), completed: false, priority, due };
+    }
+
+    function toggleTodo(todo){ return { ...todo, completed: !todo.completed }; }
+
+    function updateTodo(todo, patch){ return { ...todo, ...patch }; }
+
+    function filterTodos(todos, filter){
+      if(filter === 'active') return todos.filter(t => !t.completed);
+      if(filter === 'completed') return todos.filter(t => t.completed);
+      return todos;
+    }
+
+    function searchTodos(todos, q){
+      if(!q) return todos; const s = q.toLowerCase();
+      return todos.filter(t => t.title.toLowerCase().includes(s));
+    }
+
+    // 로컬 스토리지 어댑터 (테스트 용이하게 인터페이스 분리)
+    class StorageAdapter{
+      constructor(namespace = 'todo.app.v1', storage = window.localStorage){
+        this.ns = namespace; this.storage = storage;
+      }
+      load(){
+        try{ const raw = this.storage.getItem(this.ns); return raw ? JSON.parse(raw) : []; }
+        catch(e){ console.warn('저장 데이터 파싱 실패', e); return []; }
+      }
+      save(data){
+        try{ this.storage.setItem(this.ns, JSON.stringify(data)); }
+        catch(e){ console.warn('저장 실패', e); }
+      }
+      clear(){ try{ this.storage.removeItem(this.ns); } catch(_){} }
+    }
+
+    // Todo 저장소: 상태 관리 + 영속화
+    class TodoStore{
+      constructor(adapter = new StorageAdapter()){
+        this.adapter = adapter; this.state = { todos: [], filter: 'all', query: '' };
+        this.state.todos = this.adapter.load();
+      }
+      add(title, priority, due){
+        const t = createTodo(title, priority, due || null);
+        this.state.todos = [t, ...this.state.todos];
+        this.adapter.save(this.state.todos); return t;
+      }
+      remove(id){ this.state.todos = this.state.todos.filter(t => t.id !== id); this.adapter.save(this.state.todos); }
+      toggle(id){ this.state.todos = this.state.todos.map(t => t.id===id ? toggleTodo(t) : t); this.adapter.save(this.state.todos); }
+      update(id, patch){ this.state.todos = this.state.todos.map(t => t.id===id ? updateTodo(t, patch) : t); this.adapter.save(this.state.todos); }
+      setFilter(f){ this.state.filter = f; }
+      setQuery(q){ this.state.query = q || ''; }
+      clearAll(){ this.state.todos = []; this.adapter.save(this.state.todos); }
+      get visible(){ return searchTodos(filterTodos(this.state.todos, this.state.filter), this.state.query); }
+      get counts(){
+        const total = this.state.todos.length;
+        const completed = this.state.todos.filter(t=>t.completed).length;
+        return { total, completed, active: total - completed };
+      }
+    }
+
+    /*****************************************************************
+     * UI 렌더링 및 상호작용
+     *****************************************************************/
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    const store = new TodoStore();
+
+    function formatDue(due){
+      if(!due) return '마감일 없음';
+      try{
+        const today = new Date(); today.setHours(0,0,0,0);
+        const d = new Date(due + 'T00:00:00');
+        const diff = Math.ceil((d - today) / (1000*60*60*24));
+        if(diff < 0) return `만료 ${Math.abs(diff)}일`;
+        if(diff === 0) return '오늘 마감';
+        return `${diff}일 남음`;
+      } catch{ return '마감일'; }
+    }
+
+    function priorityBadge(prio){
+      const map = { high: ['높음','prio-high'], medium: ['중간','prio-medium'], low: ['낮음','prio-low'] };
+      const [label, cls] = map[prio] || map.medium;
+      return `<span class="badge ${cls}" aria-label="우선순위 ${label}">${label}</span>`;
+    }
+
+    function render(){
+      const list = $('#todo-list'); const empty = $('#empty');
+      list.innerHTML = '';
+      const items = store.visible;
+      if(items.length === 0){ empty.hidden = false; }
+      else { empty.hidden = true; }
+      items.forEach(t => {
+        const li = document.createElement('li');
+        li.className = 'todo enter' + (t.completed ? ' done' : '');
+        li.setAttribute('role','listitem');
+        li.dataset.id = t.id;
+        li.innerHTML = `
+          <input type="checkbox" aria-label="완료로 표시" ${t.completed?'checked':''} />
+          <div class="todo-label">
+            <div class="todo-title" tabindex="0">${escapeHtml(t.title)}</div>
+            <div class="todo-meta">
+              ${priorityBadge(t.priority)}
+              <span aria-label="마감 정보">${formatDue(t.due)}</span>
+              ${t.due ? `<span>(마감: ${t.due})</span>`: ''}
+            </div>
+          </div>
+          <div class="todo-actions">
+            <button class="btn-flat edit" aria-label="수정">수정</button>
+            <button class="btn-flat del" aria-label="삭제">삭제</button>
+          </div>`;
+        list.appendChild(li);
+      });
+
+      // 필터 버튼 상태 업데이트
+      $$('.filters button').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.filter === store.state.filter)));
+
+      // 카운트 갱신
+      const c = store.counts; $('.counts').textContent = `전체 ${c.total} · 미완료 ${c.active} · 완료 ${c.completed}`;
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"]+/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c] || c));
+    }
+
+    function onAdd(e){
+      e.preventDefault();
+      const title = $('#title').value.trim();
+      const priority = $('#priority').value; const due = $('#due').value || null;
+      if(!title){ $('#title').focus(); return; }
+      try{
+        store.add(title, priority, due);
+        $('#todo-form').reset();
+        render();
+      } catch(err){ alert('추가 실패: ' + err.message); }
+    }
+
+    function onListClick(e){
+      const li = e.target.closest('li.todo'); if(!li) return; const id = li.dataset.id;
+      if(e.target.matches('input[type="checkbox"]')){ store.toggle(id); render(); }
+      if(e.target.matches('button.del')){ store.remove(id); render(); }
+      if(e.target.matches('button.edit')){ openEdit(li, id); }
+    }
+
+    function openEdit(li, id){
+      const todo = store.state.todos.find(t=>t.id===id); if(!todo) return;
+      const title = prompt('제목 수정', todo.title); if(title === null) return;
+      const prio = prompt('우선순위 (high/medium/low)', todo.priority) || todo.priority;
+      const due = prompt('마감일 (YYYY-MM-DD 또는 빈칸)', todo.due || '') || null;
+      try{ store.update(id, { title: title.trim(), priority: (['high','medium','low'].includes(prio)? prio : todo.priority), due }); render(); }
+      catch(e){ alert('수정 실패: ' + e.message); }
+    }
+
+    function onFilterClick(e){
+      const btn = e.target.closest('button[data-filter]'); if(!btn) return;
+      store.setFilter(btn.dataset.filter); render();
+    }
+
+    function onSearchInput(){ store.setQuery($('#searchInput').value); render(); }
+    function onSearchClear(){ $('#searchInput').value=''; store.setQuery(''); render(); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      $('#todo-form').addEventListener('submit', onAdd);
+      $('#todo-list').addEventListener('click', onListClick);
+      $('.filters').addEventListener('click', onFilterClick);
+      $('#searchInput').addEventListener('input', onSearchInput);
+      $('#clearSearch').addEventListener('click', onSearchClear);
+      render();
+    });
+
+    /*****************************************************************
+     * 테스트 (TDD 3원칙 반영)
+     * - 각 테스트 위에 Red/Green/Refactor 주석으로 사이클 기록
+     * - 순수 함수 및 Store 로직을 중심으로 테스트
+     *****************************************************************/
+
+    // 테스트를 위한 메모리 스토리지
+    class MemoryStorage{
+      constructor(){ this.map = new Map(); }
+      getItem(k){ return this.map.has(k) ? this.map.get(k) : null; }
+      setItem(k,v){ this.map.set(k, v); }
+      removeItem(k){ this.map.delete(k); }
+    }
+
+    (async function tests(){
+      // 1) Todo 항목 추가
+      // Red: 제목이 비어있으면 오류가 발생해야 한다
+      await Test.run('createTodo: 빈 제목은 오류', (assert) => {
+        let thrown = false; try{ createTodo('   '); } catch(e){ thrown = true; }
+        assert('빈 제목 오류', thrown === true);
+      });
+      // Green: 정상 생성
+      await Test.run('createTodo: 정상 생성', (assert) => {
+        const t = createTodo('Write tests','high','2025-01-01');
+        assert('타이틀', t.title === 'Write tests');
+        assert('우선순위', t.priority === 'high');
+        assert('마감일', t.due === '2025-01-01');
+      });
+      // Refactor: createTodo의 입력 검증 로직 단순화(이미 반영)
+
+      // 2) 완료 상태 토글
+      // Red: toggleTodo는 completed를 반전시킨다
+      await Test.run('toggleTodo: 완료 반전', (assert) => {
+        const a = createTodo('A');
+        const b = toggleTodo(a);
+        assert('completed가 반전', a.completed === false && b.completed === true);
+      });
+
+      // 3) 필터링 로직
+      // Red: active 필터는 미완료만, completed 필터는 완료만
+      await Test.run('filterTodos: 상태별 필터', (assert) => {
+        const a = {completed:false}, b = {completed:true}, c = {completed:false};
+        const list = [a,b,c];
+        const active = filterTodos(list,'active');
+        const done = filterTodos(list,'completed');
+        assert('active 길이', active.length === 2);
+        assert('completed 길이', done.length === 1);
+      });
+
+      // 4) 로컬 스토리지 저장/불러오기
+      // Red: 저장 후 재로딩 시 데이터가 보존되어야 한다
+      await Test.run('StorageAdapter: 저장/불러오기', (assert) => {
+        const mem = new MemoryStorage();
+        const ad = new StorageAdapter('test.ns', mem);
+        const data = [{ id:'1', title:'x', completed:false, priority:'low', due:null }];
+        ad.save(data);
+        const loaded = ad.load();
+        assert('로드 동일성', JSON.stringify(loaded) === JSON.stringify(data));
+      });
+
+      // 5) Store: 추가/삭제/토글
+      await Test.run('TodoStore: 추가/삭제/토글', (assert) => {
+        const mem = new MemoryStorage();
+        const store = new TodoStore(new StorageAdapter('test.store', mem));
+        const t = store.add('Test','medium', null);
+        assert('추가됨', store.state.todos.length === 1);
+        store.toggle(t.id);
+        assert('토글됨', store.state.todos[0].completed === true);
+        store.remove(t.id);
+        assert('삭제됨', store.state.todos.length === 0);
+      });
+
+      // 6) Store: 필터와 검색 조합
+      await Test.run('TodoStore: 필터+검색', (assert) => {
+        const mem = new MemoryStorage();
+        const store = new TodoStore(new StorageAdapter('test.fs', mem));
+        const a = store.add('Buy milk','low', null);
+        const b = store.add('Read book','high', null);
+        store.toggle(a.id); // milk 완료
+        store.setFilter('active'); // 미완료: book
+        store.setQuery('book');
+        const v = store.visible;
+        assert('검색 결과 1개', v.length === 1 && v[0].title === 'Read book');
+      });
+
+      Test.report();
+    })();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,48 @@
+• Updated Plan
+  └ ✔ Scaffold single-file app shell
+    ✔ Implement core store and storage
+    ✔ Wire UI + accessibility
+    ✔ Add filters, priority, due date
+    ✔ Write unit tests (TDD notes)
+    ✔ Style + animations + responsive
+    ✔ Verify tests log in console
+
+> 결과물 요약
+
+  - 단일 파일 앱: index.html (HTML/CSS/JS 포함)
+  - 코어 기능: 추가/수정/삭제, 완료 토글, 전체/미완료/완료 필터, 우선순위(높음/중간/낮음), 마감일, 로컬 스토리지 영구 저장
+  - UX: 반응형 레이아웃, 시각적 배지/카운트, 부드러운 애니메이션, 검색 기능, 접근성 ARIA 조치
+  - 품질: 단일 책임 함수, 한글 주석, 에러 처리, 재사용 가능한 저장소/어댑터 구조
+  - TDD: 간단한 테스트 러너/어설션, 요구된 항목에 대한 단위 테스트, 콘솔 보고, Red/Green/Refactor 주석
+
+  파일
+
+  - index.html: 앱 UI, 상태 저장소(TodoStore), 로컬 스토리지 어댑터(StorageAdapter), 순수 함수(createTodo, toggleTodo, filterTodos,
+  searchTodos), 테스트 러너/케이스 포함
+
+  테스트
+
+  - 실행: 브라우저로 index.html 열기 → 콘솔에 PASS/FAIL/요약 출력
+  - 커버리지:
+      - Todo 항목 추가 유효성 검사 및 정상 생성
+      - 완료 상태 토글
+      - 상태 필터링 로직
+      - 로컬 스토리지 저장/불러오기
+      - Store의 추가/삭제/토글 동작
+      - 필터와 검색 조합 동작
+  - 메모리 스토리지를 이용해 스토리지 의존성 분리로 테스트 독립성 확보
+
+  사용 방법
+
+  - 할 일을 입력하고 우선순위/마감일 지정 후 “추가”
+  - 체크박스로 완료 토글, “수정”으로 항목 편집, “삭제”로 제거
+  - 상단 필터(전체/미완료/완료) 및 검색 사용
+  - 카운트: 전체/미완료/완료 수 실시간 표시
+  - 데이터는 자동으로 로컬 스토리지에 저장/복원
+
+  원하시면 다음을 더 도와드릴 수 있어요:
+
+  - 드래그 앤 드롭으로 순서 변경
+  - 접근성(키보드 포커스 루프, ARIA) 강화
+  - 테스트를 UI 상호작용 수준으로 일부 확대
+

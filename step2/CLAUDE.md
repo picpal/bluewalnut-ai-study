@@ -6,11 +6,11 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 ## 환경 설정
 - **언어**: Python 3.11+
 - **주요 라이브러리**: langchain, langchain-openai (또는 langchain-anthropic)
-- **브랜치 전략**: 각 단계별로 브랜치 생성 후 완료 시 main에 merge
+- **브랜치 전략**: 각 단계(Phase)별로 브랜치 생성 후 완료 시 main에 merge
 
 ---
 
-## Step 1: LangChain + PromptTemplate + Prompt | LLM 체인
+## Phase 1: LangChain + PromptTemplate + Prompt | LLM 체인
 
 ### 목표
 - LangChain의 기본 구조 이해
@@ -31,7 +31,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ---
 
-## Step 2: Output Parsing (JSON/Dict)
+## Phase 2: Output Parsing (JSON/Dict)
 
 ### 목표
 - LLM 출력을 구조화된 데이터로 변환
@@ -52,7 +52,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ---
 
-## Step 3: Function Calling — 단일 함수
+## Phase 3: Function Calling — 단일 함수
 
 ### 목표
 - LLM의 Function Calling 기능 이해
@@ -73,7 +73,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ---
 
-## Step 4: Tool Use — 여러 함수 + 수동 실행 루프
+## Phase 4: Tool Use — 여러 함수 + 수동 실행 루프
 
 ### 목표
 - 여러 도구를 LLM이 선택하도록 설정
@@ -94,7 +94,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ---
 
-## Step 5: Workflow — LCEL 기반 다단계 파이프라인
+## Phase 5: Workflow — LCEL 기반 다단계 파이프라인
 
 ### 목표
 - LCEL을 활용한 복잡한 워크플로우 구성
@@ -115,7 +115,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ---
 
-## Step 6: Agent — Tool 자동 선택 + ReAct 루프
+## Phase 6: Agent — Tool 자동 선택 + ReAct 루프
 
 ### 목표
 - LangChain Agent 개념 이해
@@ -137,7 +137,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ---
 
-## Step 7: Prompt Chain & 디버깅 — 단계별 로그/튜닝
+## Phase 7: Prompt Chain & 디버깅 — 단계별 로그/튜닝
 
 ### 목표
 - 복잡한 프롬프트 체인 최적화
@@ -149,7 +149,7 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 - 프롬프트 튜닝 (few-shot 예제 추가, 지시문 개선)
 
 ### 예제 시나리오
-- Step 6의 Agent 실행 과정을 상세히 로깅하고 성능 개선
+- Phase 6의 Agent 실행 과정을 상세히 로깅하고 성능 개선
 
 ### 학습 포인트
 - 디버깅 모드 활성화
@@ -163,26 +163,26 @@ LangChain의 핵심 개념을 단계별로 이해하고 실습한다. 오버스�
 
 ```
 main
- ├─ step1-prompt-chain
- ├─ step2-output-parsing
- ├─ step3-function-calling
- ├─ step4-tool-use
- ├─ step5-workflow
- ├─ step6-agent
- └─ step7-debugging
+ ├─ phase1-prompt-chain
+ ├─ phase2-output-parsing
+ ├─ phase3-function-calling
+ ├─ phase4-tool-use
+ ├─ phase5-workflow
+ ├─ phase6-agent
+ └─ phase7-debugging
 ```
 
-각 단계 완료 후 main에 merge하여 점진적으로 학습 내용을 누적한다.
+각 단계(Phase) 완료 후 main에 merge하여 점진적으로 학습 내용을 누적한다.
 
 ---
 
 ## 실습 진행 방식
 
-1. **브랜치 생성**: `git checkout -b step1-prompt-chain`
+1. **브랜치 생성**: `git checkout -b phase1-prompt-chain`
 2. **코드 작성**: 해당 단계의 개념을 담은 최소한의 코드
 3. **README 업데이트**: 각 단계별 학습 내용과 실행 방법 기록
 4. **테스트 및 확인**: 코드 실행 및 결과 검증
-5. **Merge**: `git checkout main && git merge step1-prompt-chain`
+5. **Merge**: `git checkout main && git merge phase1-prompt-chain`
 
 ---
 

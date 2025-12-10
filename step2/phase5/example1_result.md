@@ -147,6 +147,104 @@ workflow = summarizer | RunnableLambda(map_to_text) | translator
 - `RunnableLambda`로 커스텀 함수를 체인에 삽입
 - 데이터 형식 변환으로 단계 간 호환성 확보
 
+### 💡 왜 입력 키를 통일하지 않았는가?
+
+#### 질문: "처음부터 모든 프롬프트가 `{text}`를 사용하면 안 되나요?"
+
+**답변: 맞습니다! 입력 키를 통일하는 것이 훨씬 더 좋은 설계입니다.**
+
+#### 예제에서 일부러 다르게 만든 3가지 이유
+
+##### 1️⃣ 실전 상황 시뮬레이션
+
+실무에서는 종종 이런 상황이 발생합니다:
+
+```python
+# 다른 팀이 만든 레거시 체인
+legacy_summarizer = PromptTemplate.from_template("...{article}...")
+
+# 우리가 만든 새로운 체인
+our_translator = PromptTemplate.from_template("...{text}...")
+
+# 통합해야 하는데 키가 달라서 문제!
+# → RunnableLambda로 해결하는 방법을 배워야 함
+```
+
+##### 2️⃣ RunnableLambda 학습
+
+키 매핑은 `RunnableLambda`의 중요한 사용 사례:
+
+```python
+def map_to_text(output: str) -> dict:
+    return {"text": output}
+
+# 데이터 형식 변환 패턴 학습
+chain = step1 | RunnableLambda(map_to_text) | step2
+```
+
+**활용 사례:**
+- 외부 라이브러리 통합
+- 레거시 코드 재사용
+- 서로 다른 API 형식 변환
+
+##### 3️⃣ 데이터 흐름 이해
+
+```
+{article} → [summarizer] → str → [map_to_text] → {text: str} → [translator] → str
+```
+
+이런 변환 과정을 명시적으로 보여줌으로써 데이터가 어떻게 흐르는지 이해할 수 있습니다.
+
+#### ✅ 실전 권장 방법
+
+**베스트 프랙티스: 입력 키 통일**
+
+```python
+# 모든 프롬프트에 동일한 키 사용
+summarizer = PromptTemplate.from_template("...{text}...")
+translator = PromptTemplate.from_template("...{text}...")
+keyword_extractor = PromptTemplate.from_template("...{text}...")
+
+# 하지만 여전히 출력(str)을 다음 입력(dict)으로 변환 필요
+workflow = (
+    summarizer
+    | RunnableLambda(lambda x: {"text": x})
+    | translator
+    | RunnableLambda(lambda x: {"text": x})
+    | keyword_extractor
+)
+
+# 실행
+result = workflow.invoke({"text": article})
+```
+
+**완전히 단순화된 버전:**
+
+```python
+# 만약 각 단계가 딕셔너리를 입력/출력한다면
+workflow = summarizer | translator | keyword_extractor
+
+# 매우 간단!
+```
+
+#### 실전 가이드라인
+
+| 상황 | 추천 방법 |
+|------|----------|
+| **새 프로젝트** | 처음부터 입력 키 통일 (`{text}`) |
+| **레거시 통합** | RunnableLambda로 키 매핑 |
+| **외부 라이브러리** | RunnableLambda로 형식 변환 |
+| **팀 컨벤션** | 팀 전체가 동일한 키 이름 사용 |
+
+#### 교훈
+
+> **"예제는 학습 목적으로 복잡하게 만들었지만, 실전에서는 가능한 한 단순하게 설계하세요."**
+
+- ✅ 동일한 입력 키 사용
+- ✅ 일관된 데이터 구조
+- ✅ 불필요한 변환 최소화
+- ⚠️  불가피한 경우에만 RunnableLambda 사용
+
 ### 3. Phase 4 vs Phase 5 비교
 
 #### Phase 4 방식 (수동 루프)

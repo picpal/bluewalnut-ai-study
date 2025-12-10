@@ -7,18 +7,18 @@ Phase 5 - 예제 3: 순차 + 병렬 조합 워크플로우
 - 실전에서 자주 사용되는 파이프라인 구조
 """
 
-import os
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda, RunnablePassthrough
 
-# API 키 설정
-os.environ["OPENAI_API_KEY"] = "your-api-key-here"
+# 환경 변수 로드
+load_dotenv()
 
 # LLM 초기화
-llm = ChatOpenAI(
-    model="gpt-4o-mini",
+llm = ChatAnthropic(
+    model="claude-3-haiku-20240307",
     temperature=0
 )
 

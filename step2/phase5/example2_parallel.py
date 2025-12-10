@@ -7,19 +7,19 @@ Phase 5 - 예제 2: 병렬 파이프라인 (Parallel Pipeline)
 - 기사를 입력받아 요약 + 감정 분석 + 키워드 추출을 동시에 수행
 """
 
-import os
 import time
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 
-# API 키 설정
-os.environ["OPENAI_API_KEY"] = "your-api-key-here"
+# 환경 변수 로드
+load_dotenv()
 
 # LLM 초기화
-llm = ChatOpenAI(
-    model="gpt-4o-mini",
+llm = ChatAnthropic(
+    model="claude-3-haiku-20240307",
     temperature=0
 )
 

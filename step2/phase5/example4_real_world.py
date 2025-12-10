@@ -8,12 +8,12 @@ Phase 5 - 예제 4: 실전 시나리오 (뉴스 기사 분석 시스템)
 - 실전에서 사용 가능한 완전한 파이프라인
 """
 
-import os
 import time
 import logging
 from datetime import datetime
 from typing import Dict, Any
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda, RunnablePassthrough
@@ -28,12 +28,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# API 키 설정
-os.environ["OPENAI_API_KEY"] = "your-api-key-here"
+# 환경 변수 로드
+load_dotenv()
 
 # LLM 초기화
-llm = ChatOpenAI(
-    model="gpt-4o-mini",
+llm = ChatAnthropic(
+    model="claude-3-haiku-20240307",
     temperature=0
 )
 
